@@ -1,15 +1,22 @@
-import { useState } from "react";
 import Header from "@/components/layout/Header";
 import HeroSection from "@/components/landing/HeroSection";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
-  // This will be replaced with actual auth state later
-  const [isLoggedIn] = useState(false);
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-primary animate-pulse font-display text-2xl">AEROMIND</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <Header isLoggedIn={isLoggedIn} />
-      <HeroSection isLoggedIn={isLoggedIn} />
+      <Header isLoggedIn={!!user} />
+      <HeroSection isLoggedIn={!!user} />
     </div>
   );
 };
