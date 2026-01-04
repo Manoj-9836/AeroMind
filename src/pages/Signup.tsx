@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -16,6 +17,14 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp, user } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,23 +38,41 @@ const Signup = () => {
       return;
     }
 
+    if (password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
-    // Simulate signup - will be replaced with actual auth
-    setTimeout(() => {
+    const { error } = await signUp(email, password, name);
+
+    if (error) {
       toast({
-        title: "Account Created",
-        description: "Welcome to Aeromind!",
+        title: "Signup Failed",
+        description: error.message,
+        variant: "destructive",
       });
-      navigate("/");
       setLoading(false);
-    }, 1500);
+      return;
+    }
+
+    toast({
+      title: "Account Created",
+      description: "Welcome to Aeromind!",
+    });
+    navigate("/");
+    setLoading(false);
   };
 
   const handleGoogleSignup = () => {
     toast({
       title: "Google Signup",
-      description: "Enable Lovable Cloud to use Google authentication.",
+      description: "Google authentication requires additional setup in the Cloud settings.",
     });
   };
 
@@ -119,7 +146,7 @@ const Signup = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 pr-10 input-glow"
                   required
-                  minLength={8}
+                  minLength={6}
                 />
                 <button
                   type="button"

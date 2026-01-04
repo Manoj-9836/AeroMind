@@ -1,12 +1,22 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   isLoggedIn?: boolean;
 }
 
 const Header = ({ isLoggedIn = false }: HeaderProps) => {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
   return (
     <motion.header 
       className="fixed top-0 left-0 right-0 z-50 px-6 py-4"
@@ -35,6 +45,9 @@ const Header = ({ isLoggedIn = false }: HeaderProps) => {
               <Link to="/book">
                 <Button variant="hero" size="sm">Book a Drone</Button>
               </Link>
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4" />
+              </Button>
             </>
           ) : (
             <>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,26 +15,43 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, user } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate login - will be replaced with actual auth
-    setTimeout(() => {
+    const { error } = await signIn(email, password);
+
+    if (error) {
       toast({
-        title: "Login Successful",
-        description: "Welcome back to Aeromind!",
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive",
       });
-      navigate("/");
       setLoading(false);
-    }, 1500);
+      return;
+    }
+
+    toast({
+      title: "Login Successful",
+      description: "Welcome back to Aeromind!",
+    });
+    navigate("/");
+    setLoading(false);
   };
 
   const handleGoogleLogin = () => {
     toast({
       title: "Google Login",
-      description: "Enable Lovable Cloud to use Google authentication.",
+      description: "Google authentication requires additional setup in the Cloud settings.",
     });
   };
 
