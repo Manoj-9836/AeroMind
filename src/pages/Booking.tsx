@@ -117,11 +117,21 @@ const Booking = () => {
 
     setLoading(true);
     setTimeout(() => {
+      const bookingId = `DRN-${Date.now().toString(36).toUpperCase()}`;
+      
       toast({
         title: "Booking Confirmed!",
         description: "Your drone delivery has been scheduled.",
       });
-      navigate("/");
+      
+      // Navigate to tracking page with booking data
+      navigate("/tracking", {
+        state: {
+          sender: formData.sender,
+          receiver: formData.receiver,
+          bookingId,
+        },
+      });
       setLoading(false);
     }, 2000);
   };
