@@ -1,8 +1,7 @@
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import droneImage from "@/assets/drone.png";
 
 interface HeroSectionProps {
   isLoggedIn?: boolean;
@@ -10,30 +9,6 @@ interface HeroSectionProps {
 
 const HeroSection = ({ isLoggedIn = false }: HeroSectionProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Drone animation path
-  const pathProgress = useMotionValue(0);
-  
-  // Define path waypoints relative to center
-  // Pattern: last letter "d" → first "A" → middle "i" → loop
-  const xPositions = [180, -180, 0, 180]; // d → A → i → d
-  const yPositions = [0, -20, 10, 0];
-  const rotations = [-5, 5, -3, -5];
-  
-  const x = useTransform(pathProgress, [0, 0.33, 0.66, 1], xPositions);
-  const y = useTransform(pathProgress, [0, 0.33, 0.66, 1], yPositions);
-  const rotate = useTransform(pathProgress, [0, 0.33, 0.66, 1], rotations);
-
-  useEffect(() => {
-    const animation = animate(pathProgress, [0, 1], {
-      duration: 8,
-      ease: "easeInOut",
-      repeat: Infinity,
-      repeatType: "loop",
-    });
-
-    return () => animation.stop();
-  }, [pathProgress]);
 
   return (
     <section 
@@ -68,38 +43,15 @@ const HeroSection = ({ isLoggedIn = false }: HeroSectionProps) => {
             Next Generation Drone Delivery
           </motion.p>
 
-          {/* Main title with drone */}
-          <div className="relative">
-            <motion.h1 
-              className="hero-title text-foreground relative z-10"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
-            >
-              <span className="glow-text">AEROMIND</span>
-            </motion.h1>
-
-            {/* Animated Drone */}
-            <motion.div
-              className="absolute top-1/2 left-1/2 z-20 pointer-events-none"
-              style={{ 
-                x, 
-                y, 
-                rotate,
-                marginLeft: "-120px",
-                marginTop: "-80px",
-              }}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6, duration: 0.8, type: "spring" }}
-            >
-              <img 
-                src={droneImage} 
-                alt="Aeromind Drone" 
-                className="w-60 md:w-72 lg:w-80 drop-shadow-2xl animate-pulse-glow"
-              />
-            </motion.div>
-          </div>
+          {/* Main title */}
+          <motion.h1 
+            className="hero-title text-foreground"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
+          >
+            <span className="glow-text">AEROMIND</span>
+          </motion.h1>
 
           {/* Description */}
           <motion.p
