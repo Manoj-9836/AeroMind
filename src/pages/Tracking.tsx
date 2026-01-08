@@ -1,7 +1,8 @@
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MapPin, Package, Clock, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Clock, CheckCircle2, Plane } from "lucide-react";
 import DeliveryMap from "@/components/tracking/DeliveryMap";
 
 interface BookingData {
@@ -24,6 +25,29 @@ const Tracking = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const bookingData = location.state as BookingData | null;
+  
+  // Track the current delivery step (0-indexed)
+  const [currentDeliveryStep, setCurrentDeliveryStep] = useState(1); // Start at "Drone Dispatched"
+
+  // Auto-progress through delivery steps
+  useEffect(() => {
+    if (!bookingData) return;
+    
+    // Progress to "In Transit" after 15 seconds
+    const transitTimer = setTimeout(() => {
+      setCurrentDeliveryStep(2);
+    }, 15000);
+    
+    // Progress to "Delivered" after 30 seconds
+    const deliveredTimer = setTimeout(() => {
+      setCurrentDeliveryStep(3);
+    }, 30000);
+    
+    return () => {
+      clearTimeout(transitTimer);
+      clearTimeout(deliveredTimer);
+    };
+  }, [bookingData]);
 
   // If no booking data, redirect to home
   if (!bookingData) {
@@ -44,11 +68,26 @@ const Tracking = () => {
     );
   }
 
+  const getStepStatus = (stepIndex: number) => {
+    if (stepIndex < currentDeliveryStep) return "completed";
+    if (stepIndex === currentDeliveryStep) return "current";
+    return "pending";
+  };
+
+  const getStepTime = (stepIndex: number) => {
+    const status = getStepStatus(stepIndex);
+    if (status === "completed") return "Completed";
+    if (status === "current") return "In progress";
+    if (stepIndex === 2) return "~15 seconds";
+    if (stepIndex === 3) return "~30 seconds";
+    return "Pending";
+  };
+
   const trackingSteps = [
-    { label: "Order Confirmed", status: "completed", time: "Just now" },
-    { label: "Drone Dispatched", status: "current", time: "In progress" },
-    { label: "In Transit", status: "pending", time: "Estimated 15 mins" },
-    { label: "Delivered", status: "pending", time: "Pending" },
+    { label: "Order Confirmed", icon: CheckCircle2 },
+    { label: "Drone Dispatched", icon: Package },
+    { label: "In Transit", icon: Plane },
+    { label: "Delivered", icon: CheckCircle2 },
   ];
 
   return (
@@ -127,48 +166,84 @@ const Tracking = () => {
           </h2>
 
           <div className="relative">
-            {trackingSteps.map((step, index) => (
-              <div key={step.label} className="flex items-start gap-4 mb-6 last:mb-0">
-                <div className="relative">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      step.status === "completed"
-                        ? "bg-green-500 text-white"
-                        : step.status === "current"
-                        ? "bg-primary text-primary-foreground animate-pulse"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {step.status === "completed" ? (
-                      <CheckCircle2 className="h-5 w-5" />
-                    ) : step.status === "current" ? (
-                      <Package className="h-5 w-5" />
-                    ) : (
-                      <Clock className="h-5 w-5" />
+            {trackingSteps.map((step, index) => {
+              const status = getStepStatus(index);
+              const StepIcon = step.icon;
+              
+              return (
+                <motion.div 
+                  key={step.label} 
+                  className="flex items-start gap-4 mb-6 last:mb-0"
+                  initial={false}
+                  animate={status === "completed" ? { scale: [1, 1.05, 1] } : {}}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="relative">
+                    <motion.div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
+                        status === "completed"
+                          ? "bg-green-500 text-white"
+                          : status === "current"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                      initial={false}
+                      animate={
+                        status === "current" 
+                          ? { scale: [1, 1.1, 1], boxShadow: ["0 0 0 0 hsl(var(--primary))", "0 0 0 8px hsla(var(--primary), 0.2)", "0 0 0 0 hsl(var(--primary))"] } 
+                          : status === "completed"
+                          ? { scale: [1, 1.2, 1] }
+                          : {}
+                      }
+                      transition={{ 
+                        duration: status === "current" ? 2 : 0.5, 
+                        repeat: status === "current" ? Infinity : 0,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      {status === "completed" ? (
+                        <motion.div
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                        >
+                          <CheckCircle2 className="h-5 w-5" />
+                        </motion.div>
+                      ) : status === "current" ? (
+                        <StepIcon className="h-5 w-5" />
+                      ) : (
+                        <Clock className="h-5 w-5" />
+                      )}
+                    </motion.div>
+                    {index < trackingSteps.length - 1 && (
+                      <motion.div
+                        className="absolute top-10 left-1/2 w-0.5 h-10 -translate-x-1/2 origin-top"
+                        initial={{ scaleY: 0 }}
+                        animate={{ 
+                          scaleY: 1,
+                          backgroundColor: status === "completed" ? "rgb(34 197 94)" : "hsl(var(--border))"
+                        }}
+                        transition={{ duration: 0.5, delay: status === "completed" ? 0.2 : 0 }}
+                        style={{ backgroundColor: status === "completed" ? "rgb(34 197 94)" : "hsl(var(--border))" }}
+                      />
                     )}
                   </div>
-                  {index < trackingSteps.length - 1 && (
-                    <div
-                      className={`absolute top-10 left-1/2 w-0.5 h-10 -translate-x-1/2 ${
-                        step.status === "completed" ? "bg-green-500" : "bg-border"
+                  <div className="flex-1 pt-2">
+                    <motion.p
+                      className={`font-medium transition-colors duration-300 ${
+                        status === "pending"
+                          ? "text-muted-foreground"
+                          : "text-foreground"
                       }`}
-                    />
-                  )}
-                </div>
-                <div className="flex-1 pt-2">
-                  <p
-                    className={`font-medium ${
-                      step.status === "pending"
-                        ? "text-muted-foreground"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {step.label}
-                  </p>
-                  <p className="text-sm text-muted-foreground">{step.time}</p>
-                </div>
-              </div>
-            ))}
+                      animate={status === "completed" ? { color: "rgb(34 197 94)" } : {}}
+                    >
+                      {step.label}
+                    </motion.p>
+                    <p className="text-sm text-muted-foreground">{getStepTime(index)}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
 
