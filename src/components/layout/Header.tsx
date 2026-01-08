@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { LogOut } from "lucide-react";
@@ -11,10 +11,23 @@ interface HeaderProps {
 const Header = ({ isLoggedIn = false }: HeaderProps) => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const handleScrollTo = (id: string) => {
+    // If already on home, scroll directly
+    if (location.pathname === "/") {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    // Otherwise navigate to home and pass desired scroll target in state
+    navigate("/", { state: { scrollTo: id } });
   };
 
   return (
@@ -31,8 +44,8 @@ const Header = ({ isLoggedIn = false }: HeaderProps) => {
 
         <nav className="hidden md:flex items-center gap-8">
           <Link to="/" className="nav-link text-sm">Home</Link>
-          <Link to="/about" className="nav-link text-sm">About</Link>
-          <Link to="/services" className="nav-link text-sm">Services</Link>
+          <button type="button" onClick={() => handleScrollTo("about")} className="nav-link text-sm">About</button>
+          <button type="button" onClick={() => handleScrollTo("services")} className="nav-link text-sm">Services</button>
           <Link to="/contact" className="nav-link text-sm">Contact</Link>
         </nav>
 
