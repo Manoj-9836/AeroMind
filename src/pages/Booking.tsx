@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,10 @@ import {
   FileCheck,
   Check,
   CreditCard,
-  Smartphone
+  Smartphone,
+  Upload,
+  X,
+  FileText
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,6 +31,7 @@ interface FormData {
     email: string;
     hasProof: boolean;
     location: string;
+    proofFile: File | null;
   };
   receiver: {
     fullName: string;
@@ -35,6 +39,7 @@ interface FormData {
     email: string;
     hasProof: boolean;
     location: string;
+    proofFile: File | null;
   };
   payment: {
     method: string;
@@ -51,10 +56,13 @@ const Booking = () => {
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<FormData>({
-    sender: { fullName: "", phone: "", email: "", hasProof: false, location: "" },
-    receiver: { fullName: "", phone: "", email: "", hasProof: false, location: "" },
+    sender: { fullName: "", phone: "", email: "", hasProof: false, location: "", proofFile: null },
+    receiver: { fullName: "", phone: "", email: "", hasProof: false, location: "", proofFile: null },
     payment: { method: "" },
   });
+  
+  const senderFileInputRef = useRef<HTMLInputElement>(null);
+  const receiverFileInputRef = useRef<HTMLInputElement>(null);
 
   const steps: { key: Step; label: string }[] = [
     { key: "sender", label: "Sender Details" },
@@ -64,11 +72,23 @@ const Booking = () => {
 
   const currentStepIndex = steps.findIndex(s => s.key === currentStep);
 
-  const updateFormData = (step: keyof FormData, field: string, value: string | boolean) => {
+  const updateFormData = (step: keyof FormData, field: string, value: string | boolean | File | null) => {
     setFormData(prev => ({
       ...prev,
       [step]: { ...prev[step], [field]: value },
     }));
+  };
+  
+  const handleFileUpload = (type: "sender" | "receiver", file: File | null) => {
+    if (file) {
+      updateFormData(type, "proofFile", file);
+      updateFormData(type, "hasProof", true);
+    }
+  };
+  
+  const removeFile = (type: "sender" | "receiver") => {
+    updateFormData(type, "proofFile", null);
+    updateFormData(type, "hasProof", false);
   };
 
   const validateStep = (step: Step): boolean => {
@@ -223,16 +243,77 @@ const Booking = () => {
             </div>
           </div>
 
+          {/* File Upload Section */}
+          <div className="space-y-3">
+            <Label>Upload ID Proof / Address Verification *</Label>
+            <input
+              type="file"
+              ref={type === "sender" ? senderFileInputRef : receiverFileInputRef}
+              className="hidden"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => handleFileUpload(type, e.target.files?.[0] || null)}
+            />
+            
+            {!data.proofFile ? (
+              <motion.button
+                type="button"
+                onClick={() => (type === "sender" ? senderFileInputRef : receiverFileInputRef).current?.click()}
+                className="w-full p-6 border-2 border-dashed border-primary/30 rounded-xl hover:border-primary/60 transition-colors bg-primary/5 hover:bg-primary/10"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Upload className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-medium text-foreground">Click to upload document</p>
+                    <p className="text-sm text-muted-foreground mt-1">PDF, JPG, or PNG (max 10MB)</p>
+                  </div>
+                </div>
+              </motion.button>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-between p-4 glass-card border border-primary/30"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm truncate max-w-[200px]">
+                      {data.proofFile.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(data.proofFile.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeFile(type)}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            )}
+          </div>
+
           <div className="flex items-center space-x-3 p-4 glass-card">
             <Checkbox
               id={`${type}-proof`}
               checked={data.hasProof}
-              onCheckedChange={(checked) => updateFormData(type, "hasProof", !!checked)}
+              disabled
             />
             <div className="flex items-center gap-2">
-              <FileCheck className="h-4 w-4 text-muted-foreground" />
+              <FileCheck className={`h-4 w-4 ${data.hasProof ? "text-primary" : "text-muted-foreground"}`} />
               <Label htmlFor={`${type}-proof`} className="cursor-pointer">
-                I confirm identity verification / proof of address *
+                {data.hasProof ? "Document uploaded ✓" : "Upload document to verify identity *"}
               </Label>
             </div>
           </div>
