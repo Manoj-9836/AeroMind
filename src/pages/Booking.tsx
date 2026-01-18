@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Footer from "@/components/layout/Footer";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  User, 
-  Phone, 
-  Mail, 
+import {
+  ArrowLeft,
+  ArrowRight,
+  User,
+  Phone,
+  Mail,
   MapPin,
   FileCheck,
   Check,
@@ -63,7 +63,7 @@ const Booking = () => {
     receiver: { fullName: "", phone: "", email: "", hasProof: false, location: "", proofFile: null },
     payment: { method: "" },
   });
-  
+
   const senderFileInputRef = useRef<HTMLInputElement>(null);
   const receiverFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,14 +81,14 @@ const Booking = () => {
       [step]: { ...prev[step], [field]: value },
     }));
   };
-  
+
   const handleFileUpload = (type: "sender" | "receiver", file: File | null) => {
     if (file) {
       updateFormData(type, "proofFile", file);
       updateFormData(type, "hasProof", true);
     }
   };
-  
+
   const removeFile = (type: "sender" | "receiver") => {
     updateFormData(type, "proofFile", null);
     updateFormData(type, "hasProof", false);
@@ -141,12 +141,12 @@ const Booking = () => {
     setLoading(true);
     setTimeout(() => {
       const bookingId = `DRN-${Date.now().toString(36).toUpperCase()}`;
-      
+
       toast({
         title: "Booking Confirmed!",
         description: "Your drone delivery has been scheduled.",
       });
-      
+
       // Save order to localStorage for the user
       if (user?.email) {
         const orderData = {
@@ -158,13 +158,13 @@ const Booking = () => {
           status: "pending" as const,
           createdAt: new Date().toISOString(),
         };
-        
+
         const existingOrders = localStorage.getItem(`orders_${user.email}`);
         const orders = existingOrders ? JSON.parse(existingOrders) : [];
         orders.push(orderData);
         localStorage.setItem(`orders_${user.email}`, JSON.stringify(orders));
       }
-      
+
       // Navigate to tracking page with booking data
       navigate("/tracking", {
         state: {
@@ -187,7 +187,7 @@ const Booking = () => {
   const renderPersonForm = (type: "sender" | "receiver") => {
     const data = formData[type];
     const title = type === "sender" ? "Sender Details" : "Receiver Details";
-    const subtitle = type === "sender" 
+    const subtitle = type === "sender"
       ? "Enter the pickup location and sender information"
       : "Enter the delivery location and receiver information";
 
@@ -274,7 +274,7 @@ const Booking = () => {
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => handleFileUpload(type, e.target.files?.[0] || null)}
             />
-            
+
             {!data.proofFile ? (
               <motion.button
                 type="button"
@@ -366,16 +366,14 @@ const Booking = () => {
             <button
               key={method.id}
               onClick={() => updateFormData("payment", "method", method.id)}
-              className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300 ${
-                isSelected 
-                  ? "border-primary bg-primary/10 glow-box" 
-                  : "border-border hover:border-primary/50 bg-card"
-              }`}
+              className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300 ${isSelected
+                ? "border-primary bg-primary/10 glow-box"
+                : "border-border hover:border-primary/50 bg-card"
+                }`}
             >
               <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                }`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  }`}>
                   <Icon className="h-5 w-5" />
                 </div>
                 <span className={`font-medium ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>
@@ -462,96 +460,94 @@ const Booking = () => {
         {/* Background effects */}
         <div className="fixed inset-0 pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
-        <div 
-          className="absolute top-1/3 right-1/4 w-[400px] h-[400px] rounded-full opacity-20"
-          style={{ background: "var(--gradient-glow)" }}
-        />
-      </div>
+          <div
+            className="absolute top-1/3 right-1/4 w-[400px] h-[400px] rounded-full opacity-20"
+            style={{ background: "var(--gradient-glow)" }}
+          />
+        </div>
 
-      <div className="relative z-10 max-w-2xl mx-auto">
-        {/* Header */}
-        <motion.div
-          className="mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="flex items-center gap-4 mb-8">
-            <Link to="/">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">Book a Drone</h1>
-              <p className="text-muted-foreground text-sm">Schedule your delivery in minutes</p>
+        <div className="relative z-10 max-w-2xl mx-auto">
+          {/* Header */}
+          <motion.div
+            className="mb-8"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-center gap-4 mb-8">
+              <Link to="/">
+                <Button variant="ghost" size="icon">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">Book a Drone</h1>
+                <p className="text-muted-foreground text-sm">Schedule your delivery in minutes</p>
+              </div>
             </div>
-          </div>
 
-          {/* Step Indicator */}
-          <div className="flex items-center justify-between mb-8">
-            {steps.map((step, index) => (
-              <div key={step.key} className="flex items-center">
-                <div className={`step-indicator ${
-                  index < currentStepIndex ? "completed" : 
-                  index === currentStepIndex ? "active" : "pending"
-                }`}>
-                  {index < currentStepIndex ? (
-                    <Check className="h-5 w-5" />
-                  ) : (
-                    index + 1
+            {/* Step Indicator */}
+            <div className="flex items-center justify-between mb-8">
+              {steps.map((step, index) => (
+                <div key={step.key} className="flex items-center">
+                  <div className={`step-indicator ${index < currentStepIndex ? "completed" :
+                    index === currentStepIndex ? "active" : "pending"
+                    }`}>
+                    {index < currentStepIndex ? (
+                      <Check className="h-5 w-5" />
+                    ) : (
+                      index + 1
+                    )}
+                  </div>
+                  <span className={`ml-2 text-sm hidden sm:block ${index === currentStepIndex ? "text-foreground font-medium" : "text-muted-foreground"
+                    }`}>
+                    {step.label}
+                  </span>
+                  {index < steps.length - 1 && (
+                    <div className={`w-12 sm:w-20 h-0.5 mx-3 ${index < currentStepIndex ? "bg-primary" : "bg-border"
+                      }`} />
                   )}
                 </div>
-                <span className={`ml-2 text-sm hidden sm:block ${
-                  index === currentStepIndex ? "text-foreground font-medium" : "text-muted-foreground"
-                }`}>
-                  {step.label}
-                </span>
-                {index < steps.length - 1 && (
-                  <div className={`w-12 sm:w-20 h-0.5 mx-3 ${
-                    index < currentStepIndex ? "bg-primary" : "bg-border"
-                  }`} />
-                )}
-              </div>
-            ))}
-          </div>
-        </motion.div>
+              ))}
+            </div>
+          </motion.div>
 
-        {/* Form Content */}
-        <div className="glass-card-strong p-8">
-          <AnimatePresence mode="wait">
-            {currentStep === "sender" && renderPersonForm("sender")}
-            {currentStep === "receiver" && renderPersonForm("receiver")}
-            {currentStep === "payment" && renderPaymentForm()}
-          </AnimatePresence>
+          {/* Form Content */}
+          <div className="glass-card-strong p-8">
+            <AnimatePresence mode="wait">
+              {currentStep === "sender" && renderPersonForm("sender")}
+              {currentStep === "receiver" && renderPersonForm("receiver")}
+              {currentStep === "payment" && renderPaymentForm()}
+            </AnimatePresence>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-border">
-            {currentStep !== "sender" ? (
-              <Button variant="outline" onClick={handleBack}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-            ) : (
-              <div />
-            )}
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8 pt-6 border-t border-border">
+              {currentStep !== "sender" ? (
+                <Button variant="outline" onClick={handleBack}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+              ) : (
+                <div />
+              )}
 
-            {currentStep !== "payment" ? (
-              <Button variant="hero" onClick={handleNext}>
-                Next
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            ) : (
-              <Button 
-                variant="hero" 
-                onClick={handleSubmit}
-                disabled={loading}
-              >
-                {loading ? "Processing..." : "Confirm & Pay ₹353"}
-              </Button>
-            )}
+              {currentStep !== "payment" ? (
+                <Button variant="hero" onClick={handleNext}>
+                  Next
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              ) : (
+                <Button
+                  variant="hero"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                >
+                  {loading ? "Processing..." : "Confirm & Pay ₹353"}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-      <Footer />
+        <Footer />
       </div>
     </div>
   );
