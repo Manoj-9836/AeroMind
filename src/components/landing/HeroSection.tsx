@@ -17,7 +17,7 @@ const HeroSection = ({ isLoggedIn = false }: HeroSectionProps) => {
 
   useEffect(() => {
     // If navigated here with state requesting a scroll, perform it
-    const requested = (location.state as any)?.scrollTo as string | undefined;
+    const requested = (location.state as LocationState)?.scrollTo;
     if (requested) {
       // Small delay to ensure sections are mounted
       setTimeout(() => {
@@ -63,7 +63,7 @@ const HeroSection = ({ isLoggedIn = false }: HeroSectionProps) => {
             </motion.p>
 
             <motion.h1
-              className="hero-title text-foreground"
+              className="hero-title text-foreground text-4xl md:text-6xl lg:text-8xl"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
@@ -151,3 +151,7 @@ const HeroSection = ({ isLoggedIn = false }: HeroSectionProps) => {
 };
 
 export default HeroSection;
+
+interface LocationState {
+  scrollTo?: string;
+}

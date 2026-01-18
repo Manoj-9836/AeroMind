@@ -1,4 +1,5 @@
 import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/landing/HeroSection";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -14,9 +15,12 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header isLoggedIn={!!user} />
-      <HeroSection isLoggedIn={!!user} />
+      <main className="flex-1">
+        <HeroSection isLoggedIn={!!user} />
+      </main>
+      <Footer />
     </div>
   );
 };

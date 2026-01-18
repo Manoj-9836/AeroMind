@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Footer from "@/components/layout/Footer";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   ArrowLeft, 
@@ -21,6 +22,7 @@ import {
   FileText
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 type Step = "sender" | "receiver" | "payment";
 
@@ -54,6 +56,7 @@ const Booking = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState<FormData>({
     sender: { fullName: "", phone: "", email: "", hasProof: false, location: "", proofFile: null },
@@ -143,6 +146,24 @@ const Booking = () => {
         title: "Booking Confirmed!",
         description: "Your drone delivery has been scheduled.",
       });
+      
+      // Save order to localStorage for the user
+      if (user?.email) {
+        const orderData = {
+          id: bookingId,
+          bookingId,
+          droneType: "Delivery Drone", // You can make this dynamic
+          sender: formData.sender,
+          receiver: formData.receiver,
+          status: "pending" as const,
+          createdAt: new Date().toISOString(),
+        };
+        
+        const existingOrders = localStorage.getItem(`orders_${user.email}`);
+        const orders = existingOrders ? JSON.parse(existingOrders) : [];
+        orders.push(orderData);
+        localStorage.setItem(`orders_${user.email}`, JSON.stringify(orders));
+      }
       
       // Navigate to tracking page with booking data
       navigate("/tracking", {
@@ -436,10 +457,11 @@ const Booking = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      {/* Background effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="flex-1 p-6">
+        {/* Background effects */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
         <div 
           className="absolute top-1/3 right-1/4 w-[400px] h-[400px] rounded-full opacity-20"
           style={{ background: "var(--gradient-glow)" }}
@@ -529,6 +551,7 @@ const Booking = () => {
             )}
           </div>
         </div>
+      <Footer />
       </div>
     </div>
   );

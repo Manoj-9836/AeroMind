@@ -1,41 +1,104 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 import { 
   Package, 
   Plane, 
-  Wrench, 
-  PauseCircle, 
-  TrendingUp,
+  MapPin,
+  Clock, 
+  CheckCircle2,
   ArrowLeft,
-  Calendar
+  Truck
 } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState } from "react";
+
+interface Order {
+  id: string;
+  bookingId: string;
+  droneType: string;
+  sender: {
+    fullName: string;
+    location: string;
+  };
+  receiver: {
+    fullName: string;
+    location: string;
+  };
+  status: "pending" | "in-transit" | "delivered";
+  createdAt: string;
+}
 
 const Dashboard = () => {
-  // Mock data
-  const totalOrders = 1247;
-  
-  const droneStatusData = [
-    { name: "Running", value: 35, color: "hsl(142, 76%, 36%)" },
-    { name: "Standby", value: 22, color: "hsl(185, 100%, 50%)" },
-    { name: "In Repair", value: 8, color: "hsl(0, 84%, 60%)" },
-  ];
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const weeklyData = [
-    { name: "Mon", orders: 45 },
-    { name: "Tue", orders: 62 },
-    { name: "Wed", orders: 58 },
-    { name: "Thu", orders: 71 },
-    { name: "Fri", orders: 89 },
-    { name: "Sat", orders: 95 },
-    { name: "Sun", orders: 67 },
-  ];
+  useEffect(() => {
+    // In a real application, fetch orders from Supabase
+    // For now, retrieve from localStorage (orders saved during booking)
+    const savedOrders = localStorage.getItem(`orders_${user?.email}`);
+    if (savedOrders) {
+      setOrders(JSON.parse(savedOrders));
+    }
+    setLoading(false);
+  }, [user?.email]);
 
-  const totalDrones = droneStatusData.reduce((acc, item) => acc + item.value, 0);
+  useEffect(() => {
+    // Auto-mark orders as delivered after 1 minute
+    const interval = setInterval(() => {
+      setOrders(prevOrders => 
+        prevOrders.map(order => {
+          if (order.status !== "delivered") {
+            const createdTime = new Date(order.createdAt).getTime();
+            const currentTime = new Date().getTime();
+            const diffInMinutes = (currentTime - createdTime) / (1000 * 60);
+            
+            if (diffInMinutes >= 1) {
+              return { ...order, status: "delivered" };
+            }
+          }
+          return order;
+        })
+      );
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-500/10 text-yellow-500";
+      case "in-transit":
+        return "bg-blue-500/10 text-blue-500";
+      case "delivered":
+        return "bg-green-500/10 text-green-500";
+      default:
+        return "bg-gray-500/10 text-gray-500";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Clock className="h-4 w-4" />;
+      case "in-transit":
+        return <Truck className="h-4 w-4" />;
+      case "delivered":
+        return <CheckCircle2 className="h-4 w-4" />;
+      default:
+        return <Package className="h-4 w-4" />;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header isLoggedIn={true} />
+      <main className="flex-1 pt-20 p-6">
       {/* Header */}
       <motion.div
         className="mb-8"
@@ -51,8 +114,8 @@ const Dashboard = () => {
               </Button>
             </Link>
             <div>
-              <h1 className="font-display text-3xl font-bold text-foreground">Admin Dashboard</h1>
-              <p className="text-muted-foreground">Welcome back, Admin</p>
+              <h1 className="font-display text-3xl font-bold text-foreground">My Dashboard</h1>
+              <p className="text-muted-foreground">Welcome, {user?.email}</p>
             </div>
           </div>
           <Link to="/book">
@@ -65,7 +128,7 @@ const Dashboard = () => {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <motion.div
           className="stat-card"
           initial={{ opacity: 0, y: 20 }}
@@ -75,16 +138,11 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm">Total Orders</p>
-              <p className="text-3xl font-bold font-display text-foreground mt-1">{totalOrders.toLocaleString()}</p>
+              <p className="text-3xl font-bold font-display text-foreground mt-1">{orders.length}</p>
             </div>
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
               <Package className="h-6 w-6 text-primary" />
             </div>
-          </div>
-          <div className="flex items-center gap-1 mt-4 text-sm">
-            <TrendingUp className="h-4 w-4 text-success" />
-            <span className="text-success">+12.5%</span>
-            <span className="text-muted-foreground">from last month</span>
           </div>
         </motion.div>
 
@@ -96,14 +154,15 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-muted-foreground text-sm">Active Drones</p>
-              <p className="text-3xl font-bold font-display text-success mt-1">35</p>
+              <p className="text-muted-foreground text-sm">In Transit</p>
+              <p className="text-3xl font-bold font-display text-blue-500 mt-1">
+                {orders.filter(o => o.status === "in-transit").length}
+              </p>
             </div>
-            <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
-              <Plane className="h-6 w-6 text-success" />
+            <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+              <Truck className="h-6 w-6 text-blue-500" />
             </div>
           </div>
-          <p className="text-muted-foreground text-sm mt-4">Currently in operation</p>
         </motion.div>
 
         <motion.div
@@ -114,126 +173,103 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-muted-foreground text-sm">Standby</p>
-              <p className="text-3xl font-bold font-display text-primary mt-1">22</p>
+              <p className="text-muted-foreground text-sm">Delivered</p>
+              <p className="text-3xl font-bold font-display text-green-500 mt-1">
+                {orders.filter(o => o.status === "delivered").length}
+              </p>
             </div>
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <PauseCircle className="h-6 w-6 text-primary" />
-            </div>
-          </div>
-          <p className="text-muted-foreground text-sm mt-4">Ready for deployment</p>
-        </motion.div>
-
-        <motion.div
-          className="stat-card"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm">In Repair</p>
-              <p className="text-3xl font-bold font-display text-destructive mt-1">8</p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
-              <Wrench className="h-6 w-6 text-destructive" />
+            <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
+              <CheckCircle2 className="h-6 w-6 text-green-500" />
             </div>
           </div>
-          <p className="text-muted-foreground text-sm mt-4">Under maintenance</p>
         </motion.div>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Drone Status Pie Chart */}
-        <motion.div
-          className="chart-container"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display text-xl font-semibold text-foreground">Drone Fleet Status</h2>
-            <span className="text-muted-foreground text-sm">{totalDrones} Total Drones</span>
+      {/* Orders List */}
+      <motion.div
+        className="chart-container"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <h2 className="font-display text-xl font-semibold text-foreground mb-6">Your Bookings</h2>
+        
+        {loading ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Loading orders...</p>
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={droneStatusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {droneStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
+        ) : orders.length === 0 ? (
+          <div className="text-center py-12">
+            <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <p className="text-muted-foreground mb-6">No orders yet. Book your first drone delivery!</p>
+            <Link to="/book">
+              <Button variant="hero">
+                <Plane className="h-4 w-4 mr-2" />
+                Book a Drone
+              </Button>
+            </Link>
           </div>
-          <div className="flex justify-center gap-6 mt-4">
-            {droneStatusData.map((item, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-sm text-muted-foreground">
-                  {item.name}: {item.value}
-                </span>
-              </div>
+        ) : (
+          <div className="space-y-4">
+            {orders.map((order, index) => (
+              <motion.div
+                key={order.id}
+                className="border border-border rounded-lg p-4 hover:bg-card/50 transition-colors"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 + index * 0.1 }}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="font-semibold text-foreground">Booking #{order.bookingId}</p>
+                      <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                        {getStatusIcon(order.status)}
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">Drone Type: {order.droneType}</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">From</p>
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{order.sender.fullName}</p>
+                            <p className="text-xs text-muted-foreground">{order.sender.location}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">To</p>
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{order.receiver.fullName}</p>
+                            <p className="text-xs text-muted-foreground">{order.receiver.location}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground mt-3">
+                      Booked: {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
+                    </p>
+                  </div>
+                  
+                  <Link to="/tracking" state={order}>
+                    <Button variant="outline" size="sm">Track Order</Button>
+                  </Link>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </motion.div>
-
-        {/* Weekly Orders Bar Chart */}
-        <motion.div
-          className="chart-container"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display text-xl font-semibold text-foreground">Weekly Orders</h2>
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <Calendar className="h-4 w-4" />
-              This Week
-            </div>
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyData}>
-                <XAxis 
-                  dataKey="name" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    color: "hsl(var(--foreground))",
-                  }}
-                />
-                <Bar 
-                  dataKey="orders" 
-                  fill="hsl(185, 100%, 50%)" 
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-      </div>
+        )}
+      </motion.div>
+      </main>
+      <Footer />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import Footer from "@/components/layout/Footer";
 import { ArrowLeft, MapPin, Package, Clock, CheckCircle2, Plane } from "lucide-react";
 import DeliveryMap from "@/components/tracking/DeliveryMap";
 
@@ -91,10 +92,11 @@ const Tracking = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      {/* Background effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="flex-1 p-6">
+        {/* Background effects */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
         <div
           className="absolute top-1/3 right-1/4 w-[400px] h-[400px] rounded-full opacity-20"
           style={{ background: "var(--gradient-glow)" }}
@@ -306,6 +308,8 @@ const Tracking = () => {
           </Button>
         </motion.div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 };
