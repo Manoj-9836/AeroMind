@@ -6,6 +6,11 @@ const team = [
     role: "CEO & Founder",
     bio: "Visionary leader driving innovation in autonomous logistics.",
   },
+    {
+    name: "Ch. Mohan Sathvik",
+    role: "Lead Engineer",
+    bio: "Designs drones and embedded systems for safety and range.",
+  },
   {
     name: "G. Jhansi",
     role: "CTO & Co-Founder",
@@ -15,11 +20,6 @@ const team = [
     name: "Ch. Bhuvana Sai",
     role: "CTO & Co-Founder",
     bio: "Systems architect focused on reliable flight orchestration.",
-  },
-  {
-    name: "Ch. Mohan Sathvik",
-    role: "Lead Engineer",
-    bio: "Designs drones and embedded systems for safety and range.",
   },
 ];
 
